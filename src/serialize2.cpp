@@ -7,31 +7,7 @@
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
 
-#include "crc.hpp"
 #include "SpookyV2.h"
-
-
-
-static void OutCharCRC(R_outpstream_t stream, int c)
-{
-    boost::crc_32_type *crc = (boost::crc_32_type *)stream->data;
-    crc->process_byte(c);
-}
-
-static void OutBytesCRC(R_outpstream_t stream, void *buf, int length)
-{
-    boost::crc_32_type *crc = (boost::crc_32_type *)stream->data;
-    crc->process_bytes(buf, length);
-}
-
-
-static void InitCRC32PStream(R_outpstream_t stream, boost::crc_32_type *crc,
-			      R_pstream_format_t type, int version,
-			      SEXP (*phook)(SEXP, SEXP), SEXP pdata)
-{
-     R_InitOutPStream(stream, (R_pstream_data_t) crc, type, version,
-		     OutCharCRC, OutBytesCRC, phook, pdata);
-}
 
 
 static void OutCharSpooky(R_outpstream_t stream, int c)
@@ -67,21 +43,8 @@ static SEXP CallHook(SEXP x, SEXP fun)
     return val;
 }
 
-static SEXP R_fastdigest(SEXP s, SEXP fun)
-{
-    boost::crc_32_type crc;
-    R_outpstream_st crc_stream;
-    R_pstream_format_t type = R_pstream_binary_format;
-    SEXP (*hook)(SEXP, SEXP);
-    int version = 0; //R_DefaultSerializeVersion?;
-    hook = fun != R_NilValue ? CallHook : NULL;
-    InitCRC32PStream(&crc_stream, &crc, type, version, hook, fun);
-    R_Serialize(s, &crc_stream);
-    
-    return ScalarReal(crc.checksum());
-}
 
-static SEXP R_fastdigest2(SEXP s, SEXP fun)
+static SEXP R_spookydigest(SEXP s, SEXP fun)
 {
     SpookyHash spooky;
     uint64 seed1 = 100000, seed2 = 9872143234;
@@ -111,21 +74,14 @@ static SEXP R_fastdigest2(SEXP s, SEXP fun)
     return ans;
 }
 
-
-
-static R_CMethodDef cMethods[] = {
-    {NULL, NULL, 0}
-};
-
 static R_CallMethodDef callMethods[]  = {
-  {"R_fastdigest", (DL_FUNC) &R_fastdigest, 2},
-  {"R_fastdigest2", (DL_FUNC) &R_fastdigest2, 2},
+  {"R_fastdigest", (DL_FUNC) &R_spookydigest, 2},
   {NULL, NULL, 0}
 };
 
 extern "C" {
 void R_init_fastdigest(DllInfo *info)
 {
-    R_registerRoutines(info, cMethods, callMethods, NULL, NULL);
+    R_registerRoutines(info, NULL, callMethods, NULL, NULL);
 }
 }

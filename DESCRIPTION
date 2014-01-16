@@ -4,7 +4,6 @@ Title: Fast low memory footprint digests of R objects
 Description: Provides an R interface to Bob Jenkin's streaming, non-cryptographic 'SpookyHash' hash algorithm for use in digest-based comparisons of R objects. fastdigest plugs directly into R's internal serialization machinery, allowing digests of all R objects the serialize() function supports, including reference-stye objects via custom hooks. Speed is high and scales linearly by object size; memory usage is constant and negligable.
 Author: Gabriel Becker, based on SpookyHash algorithm and C++ code by Bob Jenkins
 Depends: methods
-LinkingTo: BH
 Suggests:  RUnit 
 Maintainer: Gabriel Becker <gmbecker@ucdavis.edu>
-License: Boost
+License: Artistic 2.0
