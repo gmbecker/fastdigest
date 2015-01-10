@@ -1,2 +1,2 @@
 useDynLib(fastdigest, .registration=TRUE)
-exportPattern(".*")
+export("fastdigest")
